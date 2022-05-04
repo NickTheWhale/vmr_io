@@ -225,5 +225,6 @@ void loop() {
         Serial.print(dataBuffer);
         Serial.println();
     }
+    
     //Serial.flush();
 }
