@@ -225,5 +225,4 @@ void loop() {
         Serial.print(dataBuffer);
         Serial.println();
     }
-    
 }
