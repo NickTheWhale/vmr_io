@@ -1,0 +1,16 @@
+class Led {
+    private:
+        colors;
+        brightness;
+        pixel_index;
+        control_index;
+    public:
+        Led();
+        set_color;
+        set_brightness;
+        get_color;
+        get_brightness;
+        get_index;
+}
+
+Led::Led()

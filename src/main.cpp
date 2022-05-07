@@ -226,5 +226,4 @@ void loop() {
         Serial.println();
     }
     
-    //Serial.flush();
 }
