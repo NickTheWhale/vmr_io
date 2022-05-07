@@ -198,8 +198,15 @@ void ledOff() {
     pixels.show();
 }
 
+void serialFlush() {
+    while (Serial.available() > 0) {
+        Serial.read();
+    }
+}
 void setup() {
-    Serial.begin(1);
+    // i dont think the baudrate actually matters, since usb is native
+    Serial.begin(115200);
+    Serial.setTimeout(10);
     pixels.begin();
     pixels.setBrightness(ledBrightness);
     updateLed();
@@ -212,6 +219,7 @@ void setup() {
     pinMode(A1, INPUT);
     pinMode(ledPin, OUTPUT);
 
+    // activate internal pullups for each button
     for (int i = 0; i < D_PINS; i++) {
         pinMode(DIGITAL_PINS[i], INPUT_PULLUP);
     }
@@ -222,7 +230,22 @@ void loop() {
     dataBuffer = getAllData(true);
     if (dataLag != dataBuffer) {
         dataLag = dataBuffer;
-        Serial.print(dataBuffer);
+        // Serial.print(dataBuffer);
+        // Serial.println();
+    }
+    if (Serial.read() == '<') {
+        const int BUFFER_SIZE = 512;
+        char buffer[BUFFER_SIZE];
+        //char rc;
+        int szrc;
+        //rc = Serial.read();  // read first char
+        // while (rc != '<') {
+        //     rc = Serial.read();  // keep reading until start char
+        // }
+        szrc = Serial.readBytesUntil('>', buffer, BUFFER_SIZE);
+        for (int i = 0; i < szrc; i++) {
+            Serial.print(buffer[i]);
+        }
         Serial.println();
     }
 }
