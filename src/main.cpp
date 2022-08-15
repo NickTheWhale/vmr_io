@@ -3,15 +3,24 @@
 #include <Bounce2.h>
 
 const int D_PINS = 27;  // number of pins  13
-const int DIGITAL_PINS[D_PINS] = {
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 28,
-    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41};  // pins buttons are
-                                                          // connected to
+// const int DIGITAL_PINS[D_PINS] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41};
+const int DIGITAL_PINS[D_PINS] = {4,  3,  2,  1,  0,  9,  8,  7,  6,  5,  29, 28, 12, 11, 10, 34, 33, 32, 31, 30, 35, 36, 37, 38, 39, 40, 41};
+                                                        
+const String DIGITAL_PINS_ID[D_PINS] = {
+    "S0:B0:", "S0:B1:", "S0:B2:", "S0:B3:", "S0:B4:", "S1:B0:", "S1:B1:", "S1:B2:", "S1:B3:", "S1:B4:",
+    "S2:B0:", "S2:B1:", "S2:B2:", "S2:B3:", "S2:B4:", "S3:B0:", "S3:B1:", "S3:B2:", "S3:B3:", "S3:B4:",
+    "B0:B0:", "B1:B0:", "C0:B0:", "C0:B1:", "C0:B2:", "C0:B3:", "C0:B4:"
+};
+
+
 const int BOUNCE_TIME = 50;
 const int A = 25;
 const int B = 26;
 const int C = 27;
 const int A_PINS = 14;
+const String ANALOG_PINS_ID[A_PINS]  = {
+    "S0:D0:", "S0:D1:", "S1:D0:", "S1:D1:", "S2:D0:", "S2:D1:", "S3:D0:", "S3:D1:", "S0:S0:", "S1:S0:", "S2:S0:", "S3:S0:", "B0:S0:", "B1:S0:"
+};
 bool dData[D_PINS] = {0};
 #define PRIME_A 54059 /* a prime */
 #define PRIME_B 76963 /* another prime */
@@ -23,19 +32,18 @@ bool dData[D_PINS] = {0};
 /****************************************************/
 const int numberOfLeds = 22;
 int ledStates[numberOfLeds] = {};
-const int ledOrder[numberOfLeds] = {4,  3,  2,  1,  0,  5,  6,  7,  8,  9,  10,
-                                    11, 12, 13, 14, 19, 18, 17, 16, 15, 20, 21};
+const int ledOrder[numberOfLeds] = {4,  3,  2,  1,  0,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 19, 18, 17, 16, 15, 20, 21};
+// const int ledOrder[numberOfLeds] = {0,  1,  2,  3,  4,  9,  8,  7,  6,  5,  14, 13, 12, 11, 10, 15, 16, 17, 18, 19, 21, 20};
 // initial led brightness
 int ledBrightness = 20;
 const int ledPin = 13;
-Adafruit_NeoPixel pixels =
-    Adafruit_NeoPixel(numberOfLeds, ledPin, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numberOfLeds, ledPin, NEO_GRB + NEO_KHZ800);
 
 String dataLag = "";
 
 #define MAX_MESSAGE_LENGTH 255
 
-#define ITERATIONS 50  // number of analog readings
+#define ITERATIONS 40  // number of analog readings
 #define INTERVAL 10    // interval in milliseconds to send data
 
 Bounce digital[] = {
@@ -65,7 +73,7 @@ Bounce digital[] = {
     Bounce(DIGITAL_PINS[23], BOUNCE_TIME),
     Bounce(DIGITAL_PINS[24], BOUNCE_TIME),
     Bounce(DIGITAL_PINS[25], BOUNCE_TIME),
-    Bounce(DIGITAL_PINS[26], BOUNCE_TIME),
+    Bounce(DIGITAL_PINS[26], BOUNCE_TIME)
 };
 
 String getAnalogData(bool knobs) {
@@ -116,9 +124,11 @@ String getAnalogData(bool knobs) {
         // int mapVal = (( 1.6 * data[13] ) - .0047 * (data[13] * data[13]));
         int mapVal = data[13];
         if (i != 13) {
+            dataString += ANALOG_PINS_ID[i];
             dataString += String(data[i]);
             dataString += ',';
         } else {
+            dataString += ANALOG_PINS_ID[i];
             dataString += String(mapVal);
         }
     }
@@ -135,9 +145,11 @@ String getDigitalData() {
         }
     }
     for (int i = 0; i < D_PINS - 1; i++) {
+        dataString += DIGITAL_PINS_ID[i];
         dataString += String(dData[i]);
         dataString += ',';
     }
+    dataString += DIGITAL_PINS_ID[D_PINS - 1];
     dataString += String(dData[D_PINS - 1]);
     return dataString;
 }
@@ -203,6 +215,7 @@ void serialFlush() {
         Serial.read();
     }
 }
+
 void setup() {
     // i dont think the baudrate actually matters, since usb is native
     Serial.begin(115200);
@@ -226,26 +239,24 @@ void setup() {
 }
 
 void loop() {
-    String dataBuffer = "";
-    dataBuffer = getAllData(true);
-    if (dataLag != dataBuffer) {
-        dataLag = dataBuffer;
-        // Serial.print(dataBuffer);
-        // Serial.println();
-    }
-    if (Serial.read() == '<') {
-        const int BUFFER_SIZE = 512;
-        char buffer[BUFFER_SIZE];
-        //char rc;
-        int szrc;
-        //rc = Serial.read();  // read first char
-        // while (rc != '<') {
-        //     rc = Serial.read();  // keep reading until start char
-        // }
-        szrc = Serial.readBytesUntil('>', buffer, BUFFER_SIZE);
-        for (int i = 0; i < szrc; i++) {
-            Serial.print(buffer[i]);
-        }
-        Serial.println();
-    }
+    Serial.print(getAllData(true));
+    // if (dataLag != dataBuffer) {
+    //     // dataLag = dataBuffer;
+    //     // Serial.println();
+    // }
+    // if (Serial.read() == '<') {
+    //     const int BUFFER_SIZE = 512;
+    //     char buffer[BUFFER_SIZE];
+    //     //char rc;
+    //     int szrc;
+    //     //rc = Serial.read();  // read first char
+    //     // while (rc != '<') {
+    //     //     rc = Serial.read();  // keep reading until start char
+    //     // }
+    //     szrc = Serial.readBytesUntil('>', buffer, BUFFER_SIZE);
+    //     for (int i = 0; i < szrc; i++) {
+    //         Serial.print(buffer[i]);
+    //     }
+    //     Serial.println();
+    // }
 }
